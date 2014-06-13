@@ -1,5 +1,7 @@
 from datetime import datetime
 import re
+import glob
+import time
 
 class Entry:
   def __init__(self, tup):
@@ -41,9 +43,11 @@ def parse(entry):
 
 
 entries = []
-with open("My Clippings.txt") as f:
-  for entry in f.read()[3:].split("==========")[:-1]:
-    entries.append(parse(entry.strip()))
+
+for filename in glob.glob("clippings/*.txt"):
+  with open(filename) as f:
+    for entry in f.read()[3:].split("==========")[:-1]:
+      entries.append(parse(entry.strip()))
 
 entries = filter(lambda x: x.ent_type == "Highlight", entries)
 books = { }
@@ -62,20 +66,38 @@ def title_sort(book):
     return title[4:]
   return title
 
-print "---"
-print "layout: page"
-print "title: \"Earnest Money\""
-print "date: 2013-12-11 00:16"
-print "comments: false"
-print "sharing: false"
-print "footer: true"
-print "---"
+def internal_name(book):
+  author = book[1]
+  title = book[0]
+  return ("%s-%s" % (author, title)).lower().replace(" ", "-").translate(None, ",()!&.\"'")
 
-print ""
-for book in sorted(books.keys(), key=title_sort):
-  highlights = books[book]
-  print "## %s by %s" % book
-  print
-  for entry in highlights:
-    print "* %s" % entry.highlight
-  print 
+def header(title):
+  return """---
+layout: page
+title: "%s"
+date: %s
+comments: false
+sharing: false
+footer: true
+---
+
+""" % (title, time.strftime("%Y-%m-%d %H:%M"))
+
+with open("output/index.markdown", "w") as f:
+    f.write(header("Index of Book Quotes"))
+    f.write("* [**All Book Quotes**](all.html)\n")
+    for book in sorted(books.keys(), key=title_sort):
+        f.write("* [%s by %s](%s.html\n" % (book[0], book[1], internal_name(book)))
+
+with open("output/all.markdown", "w") as aggf:
+  aggf.write(header("All Book Quotes"))
+
+  for book in sorted(books.keys(), key=title_sort):
+    highlights = books[book]
+    aggf.write("## %s by %s\n" % book)
+    with open("output/%s.markdown" % internal_name(book), "w") as f:
+      f.write(header("%s by %s" % book))
+      for entry in highlights:
+        f.write("* %s\n" % entry.highlight)
+        aggf.write("* %s\n" % entry.highlight)
+      aggf.write("\n")
