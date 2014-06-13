@@ -87,7 +87,7 @@ with open("output/index.markdown", "w") as f:
     f.write(header("Index of Book Quotes"))
     f.write("* [**All Book Quotes**](all.html)\n")
     for book in sorted(books.keys(), key=title_sort):
-        f.write("* [%s by %s](%s.html\n" % (book[0], book[1], internal_name(book)))
+        f.write("* [%s by %s](%s.html)\n" % (book[0], book[1], internal_name(book)))
 
 with open("output/all.markdown", "w") as aggf:
   aggf.write(header("All Book Quotes"))
